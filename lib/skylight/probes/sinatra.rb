@@ -11,12 +11,11 @@ module Skylight
               compile_without_sk!(verb, path, *args, &block).tap do |_, _, _, wrapper|
                 # Deal with the situation where the path is a regex, and the default behavior
                 # of Ruby stringification produces an unreadable mess
-                prefix = env['SCRIPT_NAME'].to_s
                 if path.is_a?(Regexp)
-                  human_readable = "#{prefix}<sk-regex>%r{#{path.source}}</sk-regex>"
+                  human_readable = "<sk-regex>%r{#{path.source}}</sk-regex>"
                   wrapper.instance_variable_set(:@route_name, "#{verb} #{human_readable}")
                 else
-                  wrapper.instance_variable_set(:@route_name, "#{verb} #{prefix}#{path}")
+                  wrapper.instance_variable_set(:@route_name, "#{verb} #{path}")
                 end
 
                 # Newer versions of Sinatra populate env['sinatra.route']. Polyfill older
@@ -49,7 +48,7 @@ module Skylight
 
                 # Set the endpoint name to the route name
                 route = env['sinatra.route']
-                trace.endpoint = route if route
+                trace.endpoint = route.sub(/^([A-Z] )/, "\\1#{env['SCRIPT_NAME']}") if route
               end
             end
 
